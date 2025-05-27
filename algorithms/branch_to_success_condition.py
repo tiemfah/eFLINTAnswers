@@ -51,6 +51,12 @@ def branch_to_success_condition(branch: set[ALL_NODE_TYPES]):
             if not children:
                 return getattr(node, "name", str(node))
 
+            if isinstance(node, EqualsNode):
+                print(node.dependencies)
+                left = node.left
+                right = node.right
+                return f"{left.name} == {right.name}"
+
             if isinstance(node, AndNode):
                 child_conditions = [collect_success(child, visited_branch) for child in children]
                 return " && ".join(child_conditions)

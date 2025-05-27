@@ -3,13 +3,14 @@ from typing import Union, List
 
 ALL_NODE_TYPES = Union["Node", "IntNode", "BoolNode", "StringNode", "OrNode", "AndNode", "EqualsNode", "GreaterNode"]
 
+
 @dataclass
 class Node:
     name: str
     dependencies: List[ALL_NODE_TYPES] = None
 
     def __repr__(self):
-        return f"{self.name} -> {"".join([dep.name for dep in self.dependencies]) if self.dependencies else "None"}"
+        return f"{self.name} -> ({", ".join([dep.name for dep in self.dependencies]) if self.dependencies else "None"})"
 
     def __post_init__(self):
         if self.dependencies is None:
@@ -21,14 +22,21 @@ class Node:
     def __eq__(self, other):
         return hash(self) == hash(other)
 
+
 @dataclass(eq=False)
 class OrNode(Node):
     name: str = "OR"
+
+    def __repr__(self):
+        return f"{self.name} -> ({", ".join([dep.name for dep in self.dependencies]) if self.dependencies else "None"})"
 
 
 @dataclass(eq=False)
 class AndNode(Node):
     name: str = "AND"
+
+    def __repr__(self):
+        return f"{self.name} -> ({", ".join([dep.name for dep in self.dependencies]) if self.dependencies else "None"})"
 
 
 @dataclass(eq=False)
@@ -43,7 +51,7 @@ class EqualsNode(Node):
     right: Node = None
 
     def __repr__(self):
-        return f"{type(self).__name__}(left={self.left.name}, right={self.right.name})"
+        return f"{type(self).__name__} -> (left={self.left.name}, right={self.right.name})"
 
 
 @dataclass(eq=False)
@@ -53,7 +61,7 @@ class GreaterNode(Node):
     right: Node = None
 
     def __repr__(self):
-        return f"{type(self).__name__}(left={self.left.name}, right={self.right.name})"
+        return f"{type(self).__name__} -> (left={self.left.name}, right={self.right.name})"
 
 
 @dataclass(eq=False)
@@ -63,7 +71,7 @@ class GreaterOrEqualNode(Node):
     right: Node = None
 
     def __repr__(self):
-        return f"{type(self).__name__}(left={self.left.name}, right={self.right.name})"
+        return f"{type(self).__name__} -> (left={self.left.name}, right={self.right.name})"
 
 
 @dataclass(eq=False)
@@ -73,7 +81,7 @@ class LesserNode(Node):
     right: Node = None
 
     def __repr__(self):
-        return f"{type(self).__name__}(left={self.left.name}, right={self.right.name})"
+        return f"{type(self).__name__} -> (left={self.left.name}, right={self.right.name})"
 
 
 @dataclass(eq=False)
@@ -83,4 +91,4 @@ class LesserOrEqualNode(Node):
     right: Node = None
 
     def __repr__(self):
-        return f"{type(self).__name__}(left={self.left.name}, right={self.right.name})"
+        return f"{type(self).__name__} -> (left={self.left.name}, right={self.right.name})"

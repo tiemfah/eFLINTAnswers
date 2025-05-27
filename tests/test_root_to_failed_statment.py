@@ -63,6 +63,31 @@ class RootToFailedStatementTestCase(unittest.TestCase):
         actual = root_to_failed_statement(node_a)
         self.assertEqual(actual, expected)
 
+    def test_human(self):
+        human_node = Node("human")
+        or_node_1 = OrNode()
+        intelligent_node = Node("intelligent")
+        and_node_1 = AndNode()
+        featherless_node = Node("featherless")
+        biped_node = Node("biped")
+        equal_node = EqualsNode()
+        number_of_legs_node = Node("number_of_legs")
+        two_node = Node("2")
+
+        human_node.dependencies.append(or_node_1)
+        or_node_1.dependencies.append(intelligent_node)
+        or_node_1.dependencies.append(and_node_1)
+        and_node_1.dependencies.append(featherless_node)
+        and_node_1.dependencies.append(biped_node)
+        biped_node.dependencies.append(equal_node)
+        equal_node.dependencies.append(number_of_legs_node)
+        equal_node.left = number_of_legs_node
+        equal_node.dependencies.append(two_node)
+        equal_node.right = two_node
+
+        expected = "((number_of_legs != 2 || not_featherless) && not_intelligent)"
+        actual = root_to_failed_statement(human_node)
+        self.assertEqual(actual, expected)
 
 if __name__ == '__main__':
     unittest.main()

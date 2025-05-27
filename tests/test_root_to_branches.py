@@ -73,6 +73,38 @@ class RootToBranchesTestCase(unittest.TestCase):
         ]
         self.assertEqual(actual, expected)
 
+    def test_human(self):
+        human_node = Node("human")
+        or_node_1 = OrNode()
+        intelligent_node = Node("intelligent")
+        and_node_1 = AndNode()
+        featherless_node = Node("featherless")
+        biped_node = Node("biped")
+        equal_node = EqualsNode()
+        number_of_legs_node = Node("number_of_legs")
+        two_node = Node("2")
+
+        human_node.dependencies.append(or_node_1)
+        or_node_1.dependencies.append(intelligent_node)
+        or_node_1.dependencies.append(and_node_1)
+        and_node_1.dependencies.append(featherless_node)
+        and_node_1.dependencies.append(biped_node)
+        biped_node.dependencies.append(equal_node)
+        equal_node.dependencies.append(number_of_legs_node)
+        equal_node.left = number_of_legs_node
+        equal_node.dependencies.append(two_node)
+        equal_node.right = two_node
+
+        actual = root_to_branches(human_node)
+        actual.sort(key=len)
+        expected = [
+            {human_node, or_node_1, intelligent_node},
+            {human_node, or_node_1, and_node_1, featherless_node, biped_node, equal_node, number_of_legs_node},
+        ]
+        expected.sort(key=len)
+        self.assertEqual(actual[0], expected[0])
+        self.assertEqual(actual[1], expected[1])
+
 
 if __name__ == '__main__':
     unittest.main()

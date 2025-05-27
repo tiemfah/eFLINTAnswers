@@ -1,7 +1,7 @@
 import unittest
 
 from algorithms.branch_to_success_condition import branch_to_success_condition
-from model import Node, AndNode, OrNode
+from model import Node, AndNode, OrNode, EqualsNode
 
 
 class BranchToSuccessConditionTestCase(unittest.TestCase):
@@ -45,7 +45,7 @@ class BranchToSuccessConditionTestCase(unittest.TestCase):
         or_node_2.dependencies.append(node_d)
         or_node_2.dependencies.append(node_e)
 
-        input =  {node_a, and_node, or_node_1, or_node_2, node_b, node_d}
+        input = {node_a, and_node, or_node_1, or_node_2, node_b, node_d}
         expected = "(B && D)"
         actual = branch_to_success_condition(input)
         self.assertEqual(actual, expected)
@@ -73,7 +73,7 @@ class BranchToSuccessConditionTestCase(unittest.TestCase):
         or_node_2.dependencies.append(node_d)
         or_node_2.dependencies.append(node_e)
 
-        input =  {node_a, and_node, or_node_1, or_node_2, node_b, node_e}
+        input = {node_a, and_node, or_node_1, or_node_2, node_b, node_e}
         expected = "(B && E)"
         actual = branch_to_success_condition(input)
         self.assertEqual(actual, expected)
@@ -91,6 +91,58 @@ class BranchToSuccessConditionTestCase(unittest.TestCase):
 
         input = {node_a, node_b, and_node, node_c, node_d}
         expected = "(C && D)"
+        actual = branch_to_success_condition(input)
+        self.assertEqual(actual, expected)
+
+    def test_human_1(self):
+        human_node = Node("human")
+        or_node_1 = OrNode()
+        intelligent_node = Node("intelligent")
+        and_node_1 = AndNode()
+        featherless_node = Node("featherless")
+        biped_node = Node("biped")
+        equal_node = EqualsNode()
+        number_of_legs_node = Node("number_of_legs")
+        two_node = Node("2")
+
+        human_node.dependencies.append(or_node_1)
+        or_node_1.dependencies.append(intelligent_node)
+        or_node_1.dependencies.append(and_node_1)
+        and_node_1.dependencies.append(featherless_node)
+        and_node_1.dependencies.append(biped_node)
+        biped_node.dependencies.append(equal_node)
+        equal_node.dependencies.append(number_of_legs_node)
+        equal_node.dependencies.append(two_node)
+
+        input = {human_node, or_node_1, intelligent_node}
+        expected = "(intelligent)"
+        actual = branch_to_success_condition(input)
+        self.assertEqual(actual, expected)
+
+    def test_human_2(self):
+        human_node = Node("human")
+        or_node_1 = OrNode()
+        intelligent_node = Node("intelligent")
+        and_node_1 = AndNode()
+        featherless_node = Node("featherless")
+        biped_node = Node("biped")
+        equal_node = EqualsNode()
+        number_of_legs_node = Node("number_of_legs")
+        two_node = Node("2")
+
+        human_node.dependencies.append(or_node_1)
+        or_node_1.dependencies.append(intelligent_node)
+        or_node_1.dependencies.append(and_node_1)
+        and_node_1.dependencies.append(featherless_node)
+        and_node_1.dependencies.append(biped_node)
+        biped_node.dependencies.append(equal_node)
+        equal_node.dependencies.append(number_of_legs_node)
+        equal_node.left = number_of_legs_node
+        equal_node.dependencies.append(two_node)
+        equal_node.right = two_node
+
+        input = {human_node, or_node_1, and_node_1, featherless_node, biped_node, equal_node, number_of_legs_node}
+        expected = "(featherless && number_of_legs == 2)"
         actual = branch_to_success_condition(input)
         self.assertEqual(actual, expected)
 

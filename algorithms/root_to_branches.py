@@ -22,9 +22,10 @@ def root_to_branches(root: Node) -> list[set[ALL_NODE_TYPES]]:
                 do call dfs with each dependency in node.dependencies
         call dfs with root
     """
+
     def dfs(node):
         if isinstance(node, EqualsNode):
-            return [dfs(node.left)]
+            return [{node, node.left}]
         if not node.dependencies:
             return [{node}]
         if isinstance(node, OrNode):

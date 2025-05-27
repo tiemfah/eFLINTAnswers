@@ -22,4 +22,4 @@ def leaf_to_question(node: Node, node_to_type_map: dict[str, str]) -> str:
         case "string":
             return f'"What is the actor {formatted_name}?" {node.name}: {node_to_type_map[node.name]}'
         case _:
-            raise Exception(f"Unknown node type: {type(node)}")
+            raise Exception(f"Unknown node type: {type(node)} of value: {node}")
