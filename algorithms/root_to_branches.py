@@ -24,13 +24,13 @@ def root_to_branches(root: Node) -> list[set[ALL_NODE_TYPES]]:
     """
 
     def dfs(node):
-        if isinstance(node, EqualsNode):
-            return [{node, node.left}]
         if not node.dependencies:
             return [{node}]
-        if isinstance(node, OrNode):
+        if isinstance(node, (EqualsNode, LesserNode, LesserOrEqualNode, GreaterNode, GreaterOrEqualNode)):
+            return [{node, node.left}]
+        elif isinstance(node, OrNode):
             return [{node} | branch for dep in node.dependencies for branch in dfs(dep)]
-        if isinstance(node, AndNode):
+        elif isinstance(node, AndNode):
             from itertools import product
             dep_branches = [dfs(dep) for dep in node.dependencies]
             return [{node} | set().union(*combo) for combo in product(*dep_branches)]

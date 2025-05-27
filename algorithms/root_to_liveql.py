@@ -1,4 +1,4 @@
-from textwrap import dedent, indent
+from textwrap import indent
 
 from algorithms.branch_to_leaves import branch_to_leaves
 from algorithms.branch_to_negated_condition import branch_to_negated_condition
@@ -35,59 +35,40 @@ def root_to_liveql(root: Node, node_to_type_map: dict[str, str]) -> str:
         root-failed-statement <- call root-to-failed-statement with root
         add liveql with root-to-failed-statement
     """
-
-    """
-    form humanForm {
-        "Is the actor intelligent?" intelligent: bool
-        "Is the actor not intelligent?" not_intelligent: bool
-        if (intelligent) {
-            "Property human holds" result: bool(true)"
-        }
-        if (not_intelligent) {
-            "Is the actor featherless?" featherless: bool
-            "Is the actor not featherless?" not_featherless: bool
-    
-            "How many number of legs does the actor have?": number_of_legs: int
-        }
-        if (featherless && number_of_legs == 2) {
-            "Property human holds" result: bool(true)"
-        }
-        if (not_intelligent && (not_featherless || number_of_legs != 2)) {
-            "Property human does not holds" result: bool(true)"
-        }
-    }
-    """
     branches = root_to_branches(root)
     branches = sorted(branches, key=len)
     questions_and_success_condition = consume_branches(root, branches, node_to_type_map)
-    final_fail_statement = get_final_failed_statement(root)
     return "\n".join([
         f'form {root.name}Form {{',
         f'{indent(questions_and_success_condition, "\t")}',
-        f'{indent(final_fail_statement, "\t")}',
         f'}}'
     ])
 
 
 def get_if_success_holds(root: Node, success_condition: str) -> str:
-    return dedent(f'''
-        if {success_condition} {{
-            "Property {root.name} holds" result: bool(true)
-        }}''')
+    success_statement = f'"Property {root.name} holds" result: bool(true)'
+    return "\n".join([
+        f'if {success_condition} {{',
+        indent(success_statement, "\t"),
+        f'}}'
+    ])
 
 
 def get_if_negated_go_to_next_set_of_question(negated_condition: str, inner_text: str) -> str:
-    return dedent(f'''
-if {negated_condition} {{
-{inner_text}
-}}''')
+    return "\n".join([
+        f'if {negated_condition} {{',
+        indent(inner_text, "\t"),
+        f'}}'
+    ])
 
 
 def get_final_failed_statement(root: Node) -> str:
-    return dedent(f'''
-        if {root_to_failed_statement(root)} {{
-            "Property {root.name} does not holds" result: bool(true)
-        }}''')
+    final_failed_statement = f'"Property {root.name} does not holds" result: bool(true)'
+    return "\n".join([
+        f'if {root_to_failed_statement(root)} {{',
+        indent(final_failed_statement, "\t"),
+        f'}}'
+    ])
 
 
 def get_question_from_branch(branch: set[ALL_NODE_TYPES], node_to_type_map: dict[str, str]) -> str:
@@ -95,11 +76,11 @@ def get_question_from_branch(branch: set[ALL_NODE_TYPES], node_to_type_map: dict
 
 
 def consume_branches(root: Node, branches: list[set[ALL_NODE_TYPES]], node_to_type_map: dict[str, str]) -> str:
-    if branches:
-        current_branch = branches[0]
-        return "\n".join([
-            f'{get_question_from_branch(current_branch, node_to_type_map)}',
-            f'{get_if_success_holds(root, branch_to_success_condition(current_branch))}',
-            f'{get_if_negated_go_to_next_set_of_question(branch_to_negated_condition(current_branch), consume_branches(root, branches[1:], node_to_type_map)) if len(branches) > 1 else ""}',
-        ])
-    return ""
+    if not branches:
+        return ""
+    current_branch = branches[0]
+    return "\n".join([
+        f'{get_question_from_branch(current_branch, node_to_type_map)}',
+        f'{get_if_success_holds(root, branch_to_success_condition(current_branch))}',
+        f'{get_if_negated_go_to_next_set_of_question(branch_to_negated_condition(current_branch), consume_branches(root, branches[1:], node_to_type_map)) if len(branches) > 1 else get_final_failed_statement(root)}',
+    ])

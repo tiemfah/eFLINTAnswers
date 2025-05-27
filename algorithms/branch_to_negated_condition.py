@@ -19,12 +19,12 @@ def branch_to_negated_condition(branch: set[ALL_NODE_TYPES]) -> str:
             if not children:
                 return f"not_{getattr(node, 'name', str(node))}"
 
-            if isinstance(node, EqualsNode):
+            elif isinstance(node, (EqualsNode, LesserNode, LesserOrEqualNode, GreaterNode, GreaterOrEqualNode)):
                 left = node.left
                 right = node.right
                 return f"{left.name} != {right.name}"
 
-            if isinstance(node, AndNode):
+            elif isinstance(node, AndNode):
                 child_conditions = [collect_negated(child, visited_branch) for child in children]
                 return " || ".join(child_conditions)
 

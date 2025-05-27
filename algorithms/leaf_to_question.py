@@ -13,7 +13,7 @@ def leaf_to_question(node: Node, node_to_type_map: dict[str, str]) -> str:
         ....
     end case
     """
-    formatted_name = node.name.replace("_", " ")
+    formatted_name = str(node.name).replace("_", " ")
     match node_to_type_map.get(node.name, ""):
         case "int":
             return f'"How many {formatted_name} does the actor have?" {node.name}: {node_to_type_map[node.name]}'

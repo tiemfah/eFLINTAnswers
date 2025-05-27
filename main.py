@@ -1,7 +1,7 @@
 from algorithms.root_to_liveql import root_to_liveql
 from eflint.eflint_lib import EF
 from eflint.eflint_parser import create_graph, get_node_to_type_map
-from eflint.save_and_open import save_dsl_to_file, open_liveql
+# from eflint.save_and_open import save_dsl_to_file, open_liveql
 
 if __name__ == '__main__':
     """
@@ -44,5 +44,6 @@ if __name__ == '__main__':
     human_node = graph["human"]
 
     dsl_content = root_to_liveql(human_node, node_to_type_map)
+    print(dsl_content)
     # save_dsl_to_file(dsl_content, "human", "/Users/tiemfah/Projects/LiveQL/bin/nl/cwi/swat/liveql/examples/eflint.ql")
     # open_liveql()
