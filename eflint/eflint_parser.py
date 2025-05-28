@@ -141,6 +141,25 @@ class TermParser:
             return self._extract_dependencies(dom_id)
         return []
 
+    def _parse_ref(self, term: Dict) -> List[ALL_NODE_TYPES]:
+        """Parse Ref term"""
+        dom_id = term.get("var", {}).get("domID", '')
+        if dom_id and dom_id in self.types_response["types"]:
+            return self._extract_dependencies(dom_id)
+        return []
+
+    def _parse_untag(self, term: Dict) -> List[ALL_NODE_TYPES]:
+        """Parse Untag term -> skipping it."""
+        return self.parse_term(term.get("t", {}))
+
+    def _parse_not(self, term: Dict) -> List[ALL_NODE_TYPES]:
+        """Parse Not term"""
+        not_node = NotNode()
+        sub_term = term.get("t", {})
+        sub_dependencies = self.parse_term(sub_term)
+        not_node.dependencies.extend(sub_dependencies)
+        return [not_node] if not_node.dependencies else []
+
     def _try_parse_equality(self, term: Dict) -> Optional[EqualsNode]:
         """Try to parse an equality expression from an Exists term"""
         present_term = term.get("t", {})

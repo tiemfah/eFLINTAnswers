@@ -1,7 +1,7 @@
 from model import *
 
 
-def branch_to_success_condition(branch: set[ALL_NODE_TYPES]):
+def branch_to_success_condition(branch: set[ALL_NODE_TYPES]) -> str:
     """
     algorithm branch-to-success-condition is
         input: set of Node
@@ -49,13 +49,22 @@ def branch_to_success_condition(branch: set[ALL_NODE_TYPES]):
             children = [dep for dep in node.dependencies if dep in visited_branch]
 
             if not children:
-                return getattr(node, "name", str(node))
+                return node.to_liveql_var()
 
-            if isinstance(node, (EqualsNode, LesserNode, LesserOrEqualNode, GreaterNode, GreaterOrEqualNode)):
-                print(node.dependencies)
-                left = node.left
-                right = node.right
-                return f"{left.name} == {right.name}"
+            elif isinstance(node, EqualsNode):
+                return f"{node.left.to_liveql_var()} == {node.right.to_liveql_var()}"
+
+            elif isinstance(node, LesserNode):
+                return f"{node.left.to_liveql_var()} < {node.right.to_liveql_var()}"
+
+            elif isinstance(node, LesserOrEqualNode):
+                return f"{node.left.to_liveql_var()} <= {node.right.to_liveql_var()}"
+
+            elif isinstance(node, GreaterNode):
+                return f"{node.left.to_liveql_var()} > {node.right.to_liveql_var()}"
+
+            elif isinstance(node, GreaterOrEqualNode):
+                return f"{node.left.to_liveql_var()} >= {node.right.to_liveql_var()}"
 
             elif isinstance(node, AndNode):
                 child_conditions = [collect_success(child, visited_branch) for child in children]
@@ -68,7 +77,7 @@ def branch_to_success_condition(branch: set[ALL_NODE_TYPES]):
             else:
                 return collect_success(children[0], visited_branch)
 
-        return getattr(node, "name", str(node))
+        return node.to_liveql_var()
 
     if len(roots) > 1:
         root_conditions = [collect_success(root, branch) for root in roots]

@@ -17,12 +17,22 @@ def branch_to_negated_condition(branch: set[ALL_NODE_TYPES]) -> str:
             children = [dep for dep in node.dependencies if dep in visited_branch]
 
             if not children:
-                return f"not_{getattr(node, 'name', str(node))}"
+                return f"not_{node.to_liveql_var()}"
 
-            elif isinstance(node, (EqualsNode, LesserNode, LesserOrEqualNode, GreaterNode, GreaterOrEqualNode)):
-                left = node.left
-                right = node.right
-                return f"{left.name} != {right.name}"
+            elif isinstance(node, EqualsNode):
+                return f"{node.left.to_liveql_var()} != {node.right.to_liveql_var()}"
+
+            elif isinstance(node, LesserNode):
+                return f"{node.left.to_liveql_var()} >= {node.right.to_liveql_var()}"
+
+            elif isinstance(node, LesserOrEqualNode):
+                return f"{node.left.to_liveql_var()} > {node.right.to_liveql_var()}"
+
+            elif isinstance(node, GreaterNode):
+                return f"{node.left.to_liveql_var()} <= {node.right.to_liveql_var()}"
+
+            elif isinstance(node, GreaterOrEqualNode):
+                return f"{node.left.to_liveql_var()} < {node.right.to_liveql_var()}"
 
             elif isinstance(node, AndNode):
                 child_conditions = [collect_negated(child, visited_branch) for child in children]
@@ -35,7 +45,7 @@ def branch_to_negated_condition(branch: set[ALL_NODE_TYPES]) -> str:
             else:
                 return collect_negated(children[0], visited_branch)
 
-        return f"not_{getattr(node, 'name', str(node))}"
+        return f"not_{node.to_liveql_var()}"
 
     if not roots:
         # Handle circular dependencies - pick any node as root

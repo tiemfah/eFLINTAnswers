@@ -46,7 +46,7 @@ class BranchToNegatedStatementTestCase(unittest.TestCase):
         or_node_2.dependencies.append(node_e)
 
         input =  {node_a, and_node, or_node_1, or_node_2, node_b, node_d}
-        expected = "(not_D || not_B)"
+        expected = "(not_B || not_D)"
         actual = branch_to_negated_condition(input)
         self.assertEqual(actual, expected)
 
@@ -90,7 +90,7 @@ class BranchToNegatedStatementTestCase(unittest.TestCase):
         and_node.dependencies.append(node_d)
 
         input = {node_a, node_b, and_node, node_c, node_d}
-        expected = "(not_D || not_C)"
+        expected = "(not_C || not_D)"
         actual = branch_to_negated_condition(input)
         self.assertEqual(actual, expected)
 

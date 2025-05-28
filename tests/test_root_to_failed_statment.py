@@ -85,7 +85,7 @@ class RootToFailedStatementTestCase(unittest.TestCase):
         equal_node.dependencies.append(two_node)
         equal_node.right = two_node
 
-        expected = "((number_of_legs != 2 || not_featherless) && not_intelligent)"
+        expected = "(not_intelligent && (not_featherless || number_of_legs != 2))"
         actual = root_to_failed_statement(human_node)
         self.assertEqual(actual, expected)
 

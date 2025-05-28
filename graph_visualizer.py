@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from model import ALL_NODE_TYPES, Node, OrNode, AndNode, EqualsNode
+from model import *
 
 
-def visualize_graph_prime(node: ALL_NODE_TYPES, fig_size=(12, 9), title=None):
+def visualize_graph(node: ALL_NODE_TYPES, fig_size=(24, 18), title=None):
     """
     Visualize a Node and its dependencies as a network graph using NetworkX and Matplotlib.
     Properly handles AndNode and OrNode types.
@@ -20,7 +20,19 @@ def visualize_graph_prime(node: ALL_NODE_TYPES, fig_size=(12, 9), title=None):
     # Add nodes and edges recursively
     def add_nodes_and_edges(n, parent=None):
         if isinstance(n, EqualsNode):
-            node_label = "EXISTS"
+            node_label = "EQUALS"
+            node_color = 'lightyellow'
+        elif isinstance(n, LesserNode):
+            node_label = "LESSER"
+            node_color = 'lightyellow'
+        elif isinstance(n, LesserOrEqualNode):
+            node_label = "LESSER_OR_EQUAL"
+            node_color = 'lightyellow'
+        elif isinstance(n, GreaterNode):
+            node_label = "GREATER"
+            node_color = 'lightyellow'
+        elif isinstance(n, GreaterOrEqualNode):
+            node_label = "GREATER_OR_EQUAL"
             node_color = 'lightyellow'
         elif isinstance(n, AndNode):
             node_label = "AND"
@@ -28,13 +40,14 @@ def visualize_graph_prime(node: ALL_NODE_TYPES, fig_size=(12, 9), title=None):
         elif isinstance(n, OrNode):
             node_label = "OR"
             node_color = 'salmon'
+        elif isinstance(n, NotNode):
+            node_label = "NOT"
+            node_color = '#C65769'
         elif isinstance(n, Node):
             node_label = n.name
             node_color = 'lightblue'
             if id(n) == id(root_node):
                 node_color = 'pink'
-        else:
-            return
 
         # Add the node with its attributes
         graph.add_node(id(n), label=node_label, color=node_color)
@@ -49,7 +62,7 @@ def visualize_graph_prime(node: ALL_NODE_TYPES, fig_size=(12, 9), title=None):
 
         # Mark as visited
         if isinstance(n, Node):
-            visited.add(n.name)
+            visited.add(id(n))
 
         # Process dependencies
         for dep in n.dependencies:

@@ -22,6 +22,12 @@ class Node:
     def __eq__(self, other):
         return hash(self) == hash(other)
 
+    def to_liveql_var(self):
+        return str(self.name).replace(" ", "_").replace("[", "").replace("]", "")
+
+    def to_question(self):
+        return str(self.name).replace("_", " ").replace("[", "").replace("]", "")
+
 
 @dataclass(eq=False)
 class OrNode(Node):
@@ -34,6 +40,14 @@ class OrNode(Node):
 @dataclass(eq=False)
 class AndNode(Node):
     name: str = "AND"
+
+    def __repr__(self):
+        return f"{self.name} -> ({", ".join([dep.name for dep in self.dependencies]) if self.dependencies else "None"})"
+
+
+@dataclass(eq=False)
+class NotNode(Node):
+    name: str = "NOT"
 
     def __repr__(self):
         return f"{self.name} -> ({", ".join([dep.name for dep in self.dependencies]) if self.dependencies else "None"})"

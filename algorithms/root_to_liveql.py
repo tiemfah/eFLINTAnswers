@@ -39,14 +39,14 @@ def root_to_liveql(root: Node, node_to_type_map: dict[str, str]) -> str:
     branches = sorted(branches, key=len)
     questions_and_success_condition = consume_branches(root, branches, node_to_type_map)
     return "\n".join([
-        f'form {root.name}Form {{',
+        f'form {root.to_liveql_var()}Form {{',
         f'{indent(questions_and_success_condition, "\t")}',
         f'}}'
     ])
 
 
 def get_if_success_holds(root: Node, success_condition: str) -> str:
-    success_statement = f'"Property {root.name} holds" result: bool(true)'
+    success_statement = f'"Property {root.to_question()} holds" result: bool(true)'
     return "\n".join([
         f'if {success_condition} {{',
         indent(success_statement, "\t"),
@@ -63,7 +63,7 @@ def get_if_negated_go_to_next_set_of_question(negated_condition: str, inner_text
 
 
 def get_final_failed_statement(root: Node) -> str:
-    final_failed_statement = f'"Property {root.name} does not holds" result: bool(true)'
+    final_failed_statement = f'"Property {root.to_question()} does not holds" result: bool(true)'
     return "\n".join([
         f'if {root_to_failed_statement(root)} {{',
         indent(final_failed_statement, "\t"),
