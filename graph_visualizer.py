@@ -48,6 +48,8 @@ def visualize_graph(node: ALL_NODE_TYPES, fig_size=(24, 18), title=None):
             node_color = 'lightblue'
             if id(n) == id(root_node):
                 node_color = 'pink'
+        else:
+            raise ValueError(f"Unknown node type {type(n)}, {n}")
 
         # Add the node with its attributes
         graph.add_node(id(n), label=node_label, color=node_color)
@@ -85,7 +87,7 @@ def visualize_graph(node: ALL_NODE_TYPES, fig_size=(24, 18), title=None):
         plt.title(title)
 
     # Set node positions
-    pos = nx.spring_layout(graph, seed=42, k=0.5)
+    pos = nx.spring_layout(graph, seed=42, k=0.8, iterations=150)
 
     # Draw nodes
     nx.draw(graph, pos,

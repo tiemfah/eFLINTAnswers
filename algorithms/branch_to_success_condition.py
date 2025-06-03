@@ -51,8 +51,12 @@ def branch_to_success_condition(branch: set[ALL_NODE_TYPES]) -> str:
             if not children:
                 return node.to_liveql_var()
 
+            elif isinstance(node, NotNode):
+                child_conditions = [collect_success(child, visited_branch) for child in children]
+                return f"!({"".join(child_conditions)})"
+
             elif isinstance(node, EqualsNode):
-                return f"{node.left.to_liveql_var()} == {node.right.to_liveql_var()}"
+                return f"{node.left.to_liveql_var()} == {node.right.to_live_ql_value()}"
 
             elif isinstance(node, LesserNode):
                 return f"{node.left.to_liveql_var()} < {node.right.to_liveql_var()}"

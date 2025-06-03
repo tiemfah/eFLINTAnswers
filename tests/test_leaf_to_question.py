@@ -23,7 +23,7 @@ class LeafToQuestionTestCase(unittest.TestCase):
     def test_string_node(self):
         node = Node("name")
         node_to_type_map = {"name": "string"}
-        expected = '"What is the actor name?" name: string'
+        expected = '"What is the actor name?" name: str'
         actual = leaf_to_question(node, node_to_type_map)
         self.assertEqual(actual, expected)
 

@@ -20,7 +20,7 @@ def leaf_to_question(node: Node, node_to_type_map: dict[str, str]) -> str:
             return f'"How many {formatted_name} does the actor have?" {formatted_var_name}: {node_to_type_map[node.name]}'
         case "bool":
             return f'"Is the actor {formatted_name}?" {formatted_var_name}: bool\n"Is the actor not {formatted_name}?" not_{formatted_var_name}: bool'
-        case "string":
+        case "str":
             return f'"What is the actor {formatted_name}?" {formatted_var_name}: {node_to_type_map[node.name]}'
         case _:
             # raise Exception(f"Unknown node type: {type(node)} of value: {node}")

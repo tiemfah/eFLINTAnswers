@@ -1,4 +1,5 @@
 from textwrap import indent
+from typing import Any, Union
 
 from algorithms.branch_to_leaves import branch_to_leaves
 from algorithms.branch_to_negated_condition import branch_to_negated_condition
@@ -9,7 +10,7 @@ from algorithms.root_to_failed_statement import root_to_failed_statement
 from model import Node, ALL_NODE_TYPES
 
 
-def root_to_liveql(root: Node, node_to_type_map: dict[str, str]) -> str:
+def root_to_liveql(root: Node, node_to_type_map: dict[str, str], parameter_facts: dict[str, Any]) -> str:
     """
     algorithm map-to-LiveQL
         input: root
@@ -40,9 +41,28 @@ def root_to_liveql(root: Node, node_to_type_map: dict[str, str]) -> str:
     questions_and_success_condition = consume_branches(root, branches, node_to_type_map)
     return "\n".join([
         f'form {root.to_liveql_var()}Form {{',
+        f'{indent(get_formatted_parameter_facts(parameter_facts), "\t")}',
         f'{indent(questions_and_success_condition, "\t")}',
         f'}}'
     ])
+
+
+def get_formatted_parameter_facts(parameter_facts: dict[str, Any]) -> str:
+    return "\n".join([
+        f'"{fact_name}" {fact_name}:{fact_value_to_type(value)}({value})' for fact_name, value in
+        parameter_facts.items()
+    ])
+
+
+def fact_value_to_type(value: Union[str, int, bool]) -> str:
+    if isinstance(value, bool):
+        return "bool"
+    elif isinstance(value, int):
+        return "int"
+    elif isinstance(value, str):
+        return "str"
+    else:
+        raise Exception(f"unknown type {type(value)}")
 
 
 def get_if_success_holds(root: Node, success_condition: str) -> str:

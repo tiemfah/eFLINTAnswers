@@ -1,5 +1,4 @@
-from typing import Dict
-from typing import Optional
+from typing import Dict, Optional, Any
 
 from model import *
 
@@ -7,8 +6,8 @@ from model import *
 class TermParser:
     """Handles parsing of term structures into nodes"""
 
-    def __init__(self, types_response: dict, node_cache: Dict[str, Node]):
-        self.types_response = types_response
+    def __init__(self, type_response: dict, node_cache: Dict[str, Node]):
+        self.type_response = type_response
         self.node_cache = node_cache
 
     def parse_term(self, term: Dict) -> List[ALL_NODE_TYPES]:
@@ -22,6 +21,13 @@ class TermParser:
             return parser_method(term)
 
         return []
+
+    def _parse_when(self, term: Dict) -> List[ALL_NODE_TYPES]:
+        parent_node_name = term["t1"]["var"]["domID"]
+        dependency_node = self.parse_term(term["t2"])
+        self.node_cache[parent_node_name].dependencies.extend(dependency_node)
+
+        return [dependency_node]
 
     def _parse_and(self, term: Dict) -> List[ALL_NODE_TYPES]:
         """Parse AND term"""
@@ -47,6 +53,9 @@ class TermParser:
 
     def _parse_present(self, term: Dict) -> List[ALL_NODE_TYPES]:
         """Parse Present term"""
+        equals_node = self._try_parse_equality_utrecht(term)
+        if equals_node:
+            return [equals_node]
         sub_term = term.get("t", {})
         return self.parse_term(sub_term)
 
@@ -59,6 +68,16 @@ class TermParser:
         # Fallback to parsing the nested term
         sub_term = term.get("t", {})
         return self.parse_term(sub_term)
+
+    def _parse_eq(self, term: Dict) -> List[ALL_NODE_TYPES]:
+        """Parse Equality term"""
+        equals_node = EqualsNode()
+        left = self.parse_term(term.get("t1", {}))[0]
+        equals_node.left = left
+        right = self._parse_tag(term.get("t2", {}))[0]
+        equals_node.right = right
+        equals_node.dependencies.extend([left, right])
+        return [equals_node] if equals_node.dependencies else []
 
     def _parse_intlit(self, term: Dict) -> List[ALL_NODE_TYPES]:
         """Parse Intlit term"""
@@ -137,16 +156,23 @@ class TermParser:
     def _parse_app(self, term: Dict) -> List[ALL_NODE_TYPES]:
         """Parse App term"""
         dom_id = term.get("domID")
-        if dom_id and dom_id in self.types_response["types"]:
+        if dom_id and dom_id in self.type_response["types"]:
             return self._extract_dependencies(dom_id)
         return []
 
     def _parse_ref(self, term: Dict) -> List[ALL_NODE_TYPES]:
         """Parse Ref term"""
         dom_id = term.get("var", {}).get("domID", '')
-        if dom_id and dom_id in self.types_response["types"]:
+        if dom_id and dom_id in self.type_response["types"]:
             return self._extract_dependencies(dom_id)
         return []
+
+    def _parse_tag(self, term: Dict) -> List[ALL_NODE_TYPES]:
+        """Parse Tag term"""
+        if term.get("t", {}).get("term-type", {}) == "StringLit":
+            return [Node(name=term.get("t", {}).get("string", ""))]
+        else:
+            raise Exception(f"Unknown term type: {term.get('term-type')}")
 
     def _parse_untag(self, term: Dict) -> List[ALL_NODE_TYPES]:
         """Parse Untag term -> skipping it."""
@@ -177,6 +203,26 @@ class TermParser:
         if left_value and right_value is not None:
             return self._create_equality_node(left_value, right_value)
 
+        return None
+
+    def _try_parse_equality_utrecht(self, term: Dict) -> Optional[EqualsNode]:
+        """Try to parse an equality expression for [Tag] == 'StringLit'"""
+        if not self._is_present_term(term):
+            return None
+
+        tag_term = term.get("t", {})
+        if tag_term.get("term-type") == "Tag":
+            dom_id = tag_term.get("domID")
+            string_lit = tag_term.get("t", {})
+            if string_lit.get("term-type") == "StringLit":
+                left_node = Node(name=dom_id)
+                right_node = Node(name=string_lit.get("string", ""))
+                return EqualsNode(
+                    name=f"{dom_id} == {string_lit.get('string', '')}",
+                    dependencies=[left_node, right_node],
+                    left=left_node,
+                    right=right_node
+                )
         return None
 
     def _is_present_term(self, term: Dict) -> bool:
@@ -219,7 +265,7 @@ class TermParser:
 
     def _extract_dependencies(self, node_name: str) -> List[ALL_NODE_TYPES]:
         """Extract dependencies for a given node name"""
-        if node_name not in self.types_response["types"]:
+        if node_name not in self.type_response["types"]:
             return []
 
         if node_name in self.node_cache:
@@ -235,7 +281,7 @@ class TermParser:
 
     def _get_node_dependencies(self, node_name: str) -> List[ALL_NODE_TYPES]:
         """Get dependencies for a specific node"""
-        type_definition = self.types_response["types"][node_name]
+        type_definition = self.type_response["types"][node_name]
 
         if not self._has_derivations(type_definition):
             return []
@@ -246,6 +292,12 @@ class TermParser:
                 term = derivation.get("term")
                 if term:
                     dependencies.extend(self.parse_term(term))
+
+        if type_definition["kind"]["kind-type"] == 'Act':
+            for effect in type_definition["kind"]["act"]["effects"]:
+                if effect.get("effect-type") == 'CAll':
+                    if effect.get("vars", []):
+                        dependencies.extend(self.parse_term(effect.get("term")))
 
         return dependencies
 
@@ -258,10 +310,10 @@ class TermParser:
 class GraphCreator:
     """Main class for creating graphs from types response"""
 
-    def __init__(self, types_response: dict):
-        self.types_response = types_response
+    def __init__(self, type_response: dict):
+        self.type_response = type_response
         self.node_cache: Dict[str, Node] = {}
-        self.term_parser = TermParser(types_response, self.node_cache)
+        self.term_parser = TermParser(type_response, self.node_cache)
 
     def create_graph(self) -> Dict[str, Node]:
         """
@@ -273,49 +325,49 @@ class GraphCreator:
 
     def _process_all_types(self) -> None:
         """Process all types in the response"""
-        for type_name in self.types_response["types"]:
+        for type_name in self.type_response["types"]:
             if type_name not in self.node_cache:
                 self.term_parser._extract_dependencies(type_name)
 
 
-def create_graph(types_res: dict) -> Dict[str, Node]:
+def create_graph(type_res: dict) -> Dict[str, Node]:
     """
     Convert a response types json to a graph that is connected then return
     the dict of query to root node of that query.
 
     Args:
-        types_res: Dictionary containing types response data
+        type_res: Dictionary containing types response data
 
     Returns:
         Dictionary mapping type names to their corresponding root nodes
     """
-    creator = GraphCreator(types_res)
+    creator = GraphCreator(type_res)
     return creator.create_graph()
 
 
-def get_node_to_type_map(types_res: dict) -> Dict[str, str]:
+def get_node_to_type_map(type_res: dict) -> Dict[str, str]:
     """
     THIS ONE COULD ONLY HANDLE PRODUCTS OF 2 TYPE
 
     Infers types from domain structures and returns a dictionary mapping node names to types.
 
     Args:
-        types_res: Dictionary containing the 'types' key with node definitions
+        type_res: Dictionary containing the 'types' key with node definitions
 
     Returns:
         Dictionary mapping node names to their inferred types
     """
     type_map = {}
-    types_data = types_res.get('types', {})
+    types_data = type_res.get('types', {})
 
     for node_name, node_info in types_data.items():
         if 'domain' in node_info:
             domain = node_info['domain']
             domain_type = domain.get('domain-type')
 
-            if domain_type == 'AnyString':
-                type_map[node_name] = 'string'
-            elif domain_type == 'AnyInt':
+            if domain_type == 'AnyString' or domain_type == 'String' or domain_type == 'Strings':
+                type_map[node_name] = 'str'
+            elif domain_type == 'AnyInt' or domain_type == 'Ints':
                 type_map[node_name] = 'int'
             elif domain_type == 'Products':
                 vars_list = domain.get('vars', [])
@@ -327,3 +379,14 @@ def get_node_to_type_map(types_res: dict) -> Dict[str, str]:
                         type_map[node_name] = 'int'
 
     return type_map
+
+
+def get_parameter_facts(type_res: dict[str: Any], fact_res: dict[str: Any]) -> Dict[str, Any]:
+    facts = {}
+    for type_name, type_value in type_res["types"].items():
+        if type_value["kind"]["kind-type"] == 'Fact':
+            facts[type_name] = None
+    for fact in fact_res["values"]:
+        if fact["fact-type"] in facts:
+            facts[fact["fact-type"]] = fact["value"]
+    return {k.replace("[", "").replace("]", ""): v for k, v in facts.items() if v is not None}

@@ -46,6 +46,16 @@ class EF:
         command = {"command": "types"}
         return _parse_to_dict(self.send_eflint_command(command))
 
+    def physical_acts(self) -> dict:
+        """Get all physical_acts from the eFLINT server"""
+        command = {"command": "physical-acts"}
+        return _parse_to_dict(self.send_eflint_command(command))
+
+    def facts(self) -> dict:
+        """Get all facts from the eFLINT server"""
+        command = {"command": "facts"}
+        return _parse_to_dict(self.send_eflint_command(command))
+
     def create(self, fact_type: str, fact_value: Union[int, str, list]) -> dict:
         """Create a fact instance in eFLINT.
 

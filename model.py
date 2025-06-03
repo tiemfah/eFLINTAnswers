@@ -28,6 +28,12 @@ class Node:
     def to_question(self):
         return str(self.name).replace("_", " ").replace("[", "").replace("]", "")
 
+    def to_live_ql_value(self):
+        try:
+            return int(self.name)
+        except (ValueError, TypeError):
+            return f'"{self.name}"'
+
 
 @dataclass(eq=False)
 class OrNode(Node):
