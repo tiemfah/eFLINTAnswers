@@ -37,10 +37,9 @@ if __name__ == '__main__':
     node_name_to_node = create_graph(type_res)
     node_to_type_map = get_node_to_type_map(type_res)
     parameter_facts = get_parameter_facts(type_res, fact_res)
-    root = node_name_to_node['[Recht op IIT 231]']
-    # visualize_graph(root)
+    root = node_name_to_node['access']
+    visualize_graph(root)
     dsl_content = root_to_liveql(root, node_to_type_map, parameter_facts)
-    # print(dsl_content)
-    # print(node_to_type_map)
+    print(dsl_content)
     save_dsl_to_file(dsl_content, "human", "/Users/tiemfah/Projects/LiveQL/bin/nl/cwi/swat/liveql/examples/eflint.ql")
     open_liveql()

@@ -291,15 +291,32 @@ class TermParser:
             if derivation.get("derivation-type") == 'HoldsWhen':
                 term = derivation.get("term")
                 if term:
-                    dependencies.extend(self.parse_term(term))
+                    dependencies.append(self.parse_term(term))
+
+        # Flatten and join with OrNode if there are multiple dependencies
+        flat_dependencies = [item for sublist in dependencies for item in sublist]
+        if len(flat_dependencies) > 1:
+            or_node = OrNode()
+            or_node.dependencies.extend(flat_dependencies)
+            flat_dependencies = [or_node]
 
         if type_definition["kind"]["kind-type"] == 'Act':
             for effect in type_definition["kind"]["act"]["effects"]:
                 if effect.get("effect-type") == 'CAll':
                     if effect.get("vars", []):
-                        dependencies.extend(self.parse_term(effect.get("term")))
+                        effect_deps = self.parse_term(effect.get("term"))
+                        if flat_dependencies:
+                            # Combine with existing OrNode if present
+                            if isinstance(flat_dependencies[0], OrNode):
+                                flat_dependencies[0].dependencies.extend(effect_deps)
+                            else:
+                                or_node = OrNode()
+                                or_node.dependencies.extend(flat_dependencies + effect_deps)
+                                flat_dependencies = [or_node]
+                        else:
+                            flat_dependencies = effect_deps
 
-        return dependencies
+        return flat_dependencies
 
     def _has_derivations(self, type_definition: Dict) -> bool:
         """Check if type definition has derivations"""
