@@ -1,7 +1,7 @@
 import unittest
 
 from algorithms.branch_to_success_condition import branch_to_success_condition
-from model import Node, AndNode, OrNode, EqualsNode
+from model import *
 
 
 class BranchToSuccessConditionTestCase(unittest.TestCase):
@@ -91,6 +91,90 @@ class BranchToSuccessConditionTestCase(unittest.TestCase):
 
         input = {node_a, node_b, and_node, node_c, node_d}
         expected = "(C && D)"
+        actual = branch_to_success_condition(input)
+        self.assertEqual(actual, expected)
+
+    def test_not_node(self):
+        node_a = Node("A")
+        not_node = NotNode()
+        node_a.dependencies.append(not_node)
+        not_node.dependencies.append(Node("B"))
+        input = {node_a, not_node, not_node.dependencies[0]}
+        expected = "(!(B))"
+        actual = branch_to_success_condition(input)
+        self.assertEqual(actual, expected)
+
+    def test_lesser_node(self):
+        node_a = Node("A")
+        lesser_node = LesserNode()
+        node_a.dependencies.append(lesser_node)
+        left = Node("x")
+        right = Node("y")
+        lesser_node.dependencies.append(left)
+        lesser_node.left = left
+        lesser_node.dependencies.append(right)
+        lesser_node.right = right
+        input = {node_a, lesser_node, left, right}
+        expected = "(x < y)"
+        actual = branch_to_success_condition(input)
+        self.assertEqual(actual, expected)
+
+    def test_lesser_or_equal_node(self):
+        node_a = Node("A")
+        lesser_eq_node = LesserOrEqualNode()
+        node_a.dependencies.append(lesser_eq_node)
+        left = Node("x")
+        right = Node("y")
+        lesser_eq_node.dependencies.append(left)
+        lesser_eq_node.left = left
+        lesser_eq_node.dependencies.append(right)
+        lesser_eq_node.right = right
+        input = {node_a, lesser_eq_node, left, right}
+        expected = "(x <= y)"
+        actual = branch_to_success_condition(input)
+        self.assertEqual(actual, expected)
+
+    def test_greater_node(self):
+        node_a = Node("A")
+        greater_node = GreaterNode()
+        node_a.dependencies.append(greater_node)
+        left = Node("x")
+        right = Node("y")
+        greater_node.dependencies.append(left)
+        greater_node.left = left
+        greater_node.dependencies.append(right)
+        greater_node.right = right
+        input = {node_a, greater_node, left, right}
+        expected = "(x > y)"
+        actual = branch_to_success_condition(input)
+        self.assertEqual(actual, expected)
+
+    def test_greater_or_equal_node(self):
+        node_a = Node("A")
+        greater_eq_node = GreaterOrEqualNode()
+        node_a.dependencies.append(greater_eq_node)
+        left = Node("x")
+        right = Node("y")
+        greater_eq_node.dependencies.append(left)
+        greater_eq_node.left = left
+        greater_eq_node.dependencies.append(right)
+        greater_eq_node.right = right
+        input = {node_a, greater_eq_node, left, right}
+        expected = "(x >= y)"
+        actual = branch_to_success_condition(input)
+        self.assertEqual(actual, expected)
+
+    def test_empty_input(self):
+        input = set()
+        expected = ""
+        actual = branch_to_success_condition(input)
+        self.assertEqual(actual, expected)
+
+    def test_multiple_roots(self):
+        node_a = Node("A")
+        node_b = Node("B")
+        input = {node_a, node_b}
+        expected = "(A && B)"
         actual = branch_to_success_condition(input)
         self.assertEqual(actual, expected)
 

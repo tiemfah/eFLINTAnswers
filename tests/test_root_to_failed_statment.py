@@ -63,6 +63,86 @@ class RootToFailedStatementTestCase(unittest.TestCase):
         actual = root_to_failed_statement(node_a)
         self.assertEqual(actual, expected)
 
+    def test_not_node(self):
+        node_a = Node("A")
+        not_node = NotNode()
+        not_node.dependencies.append(node_a)
+        node_b = Node("B")
+        node_b.dependencies.append(not_node)
+        expected = "!(not_A)"
+        actual = root_to_failed_statement(node_b)
+        self.assertEqual(actual, expected)
+
+    def test_equals_node(self):
+        node_a = Node("A")
+        node_b = Node("B")
+        equals_node = EqualsNode()
+        equals_node.left = node_a
+        equals_node.right = node_b
+        node_c = Node("C")
+        node_c.dependencies.append(equals_node)
+        equals_node.dependencies.append(node_a)
+        equals_node.dependencies.append(node_b)
+        expected = 'A != "B"'
+        actual = root_to_failed_statement(node_c)
+        self.assertEqual(actual, expected)
+
+    def test_lesser_node(self):
+        node_a = Node("A")
+        node_b = Node("B")
+        lesser_node = LesserNode()
+        lesser_node.left = node_a
+        lesser_node.right = node_b
+        node_c = Node("C")
+        node_c.dependencies.append(lesser_node)
+        lesser_node.dependencies.append(node_a)
+        lesser_node.dependencies.append(node_b)
+        expected = "A >= B"
+        actual = root_to_failed_statement(node_c)
+        self.assertEqual(actual, expected)
+
+    def test_lesser_or_equal_node(self):
+        node_a = Node("A")
+        node_b = Node("B")
+        lesser_or_equal_node = LesserOrEqualNode()
+        lesser_or_equal_node.left = node_a
+        lesser_or_equal_node.right = node_b
+        node_c = Node("C")
+        node_c.dependencies.append(lesser_or_equal_node)
+        lesser_or_equal_node.dependencies.append(node_a)
+        lesser_or_equal_node.dependencies.append(node_b)
+        expected = "A > B"
+        actual = root_to_failed_statement(node_c)
+        self.assertEqual(actual, expected)
+
+    def test_greater_node(self):
+        node_a = Node("A")
+        node_b = Node("B")
+        greater_node = GreaterNode()
+        greater_node.left = node_a
+        greater_node.right = node_b
+        node_c = Node("C")
+        node_c.dependencies.append(greater_node)
+        greater_node.dependencies.append(node_a)
+        greater_node.dependencies.append(node_b)
+        expected = "A <= B"
+        actual = root_to_failed_statement(node_c)
+        self.assertEqual(actual, expected)
+
+    def test_greater_or_equal_node(self):
+        node_a = Node("A")
+        node_b = Node("B")
+        greater_or_equal_node = GreaterOrEqualNode()
+        greater_or_equal_node.left = node_a
+        greater_or_equal_node.right = node_b
+        node_c = Node("C")
+        node_c.dependencies.append(greater_or_equal_node)
+        greater_or_equal_node.dependencies.append(node_a)
+        greater_or_equal_node.dependencies.append(node_b)
+        expected = "A < B"
+        actual = root_to_failed_statement(node_c)
+        self.assertEqual(actual, expected)
+
     def test_human(self):
         human_node = Node("human")
         or_node_1 = OrNode()
@@ -88,6 +168,7 @@ class RootToFailedStatementTestCase(unittest.TestCase):
         expected = "(not_intelligent && (not_featherless || number_of_legs != 2))"
         actual = root_to_failed_statement(human_node)
         self.assertEqual(actual, expected)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -27,6 +27,11 @@ class LeafToQuestionTestCase(unittest.TestCase):
         actual = leaf_to_question(node, node_to_type_map)
         self.assertEqual(actual, expected)
 
+    def test_unknown_node_type_raises_exception(self):
+        node = Node("unknown_field")
+        node_to_type_map = {"unknown_field": "float"}
+        with self.assertRaises(Exception):
+            leaf_to_question(node, node_to_type_map)
 
 if __name__ == '__main__':
     unittest.main()

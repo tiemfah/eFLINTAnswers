@@ -45,7 +45,7 @@ class BranchToNegatedStatementTestCase(unittest.TestCase):
         or_node_2.dependencies.append(node_d)
         or_node_2.dependencies.append(node_e)
 
-        input =  {node_a, and_node, or_node_1, or_node_2, node_b, node_d}
+        input = {node_a, and_node, or_node_1, or_node_2, node_b, node_d}
         expected = "(not_B || not_D)"
         actual = branch_to_negated_condition(input)
         self.assertEqual(actual, expected)
@@ -73,7 +73,7 @@ class BranchToNegatedStatementTestCase(unittest.TestCase):
         or_node_2.dependencies.append(node_d)
         or_node_2.dependencies.append(node_e)
 
-        input =  {node_a, and_node, or_node_1, or_node_2, node_b, node_e}
+        input = {node_a, and_node, or_node_1, or_node_2, node_b, node_e}
         expected = "(not_B || not_E)"
         actual = branch_to_negated_condition(input)
         self.assertEqual(actual, expected)
@@ -146,6 +146,91 @@ class BranchToNegatedStatementTestCase(unittest.TestCase):
         actual = branch_to_negated_condition(input)
         self.assertEqual(actual, expected)
 
+    def test_circular_dependency(self):
+        node_a = Node("A")
+        node_b = Node("B")
+        node_a.dependencies.append(node_b)
+        node_b.dependencies.append(node_a)
+        input = {node_a, node_b}
+        actual = branch_to_negated_condition(input)
+        self.assertTrue(actual.startswith("(not_"))
+
+    def test_not_node(self):
+        node_a = Node("A")
+        not_node = NotNode()
+        not_node.dependencies.append(node_a)
+        input = {not_node, node_a}
+        actual = branch_to_negated_condition(input)
+        self.assertEqual(actual, "(!(not_A))")
+
+    def test_lesser_node(self):
+        left = Node("X")
+        right = Node("Y")
+        lesser_node = LesserNode()
+        lesser_node.left = left
+        lesser_node.right = right
+        lesser_node.dependencies.append(left)
+        lesser_node.dependencies.append(right)
+        input = {lesser_node, left, right}
+        actual = branch_to_negated_condition(input)
+        self.assertEqual(actual, "(X >= Y)")
+
+    def test_lesser_or_equal_node(self):
+        left = Node("X")
+        right = Node("Y")
+        node = LesserOrEqualNode()
+        node.left = left
+        node.right = right
+        node.dependencies.append(left)
+        node.dependencies.append(right)
+        input = {node, left, right}
+        actual = branch_to_negated_condition(input)
+        self.assertEqual(actual, "(X > Y)")
+
+    def test_greater_node(self):
+        left = Node("X")
+        right = Node("Y")
+        node = GreaterNode()
+        node.left = left
+        node.right = right
+        node.dependencies.append(left)
+        node.dependencies.append(right)
+        input = {node, left, right}
+        actual = branch_to_negated_condition(input)
+        self.assertEqual(actual, "(X <= Y)")
+
+    def test_greater_or_equal_node(self):
+        left = Node("X")
+        right = Node("Y")
+        node = GreaterOrEqualNode()
+        node.left = left
+        node.right = right
+        node.dependencies.append(left)
+        node.dependencies.append(right)
+        input = {node, left, right}
+        actual = branch_to_negated_condition(input)
+        self.assertEqual(actual, "(X < Y)")
+
+    def test_else_fallback(self):
+        # Node with dependencies, but not matching any if/elif
+        class CustomNode(Node):
+            pass
+
+        node_a = Node("A")
+        custom_node = CustomNode("custom")
+        custom_node.dependencies.append(node_a)
+        input = {custom_node, node_a}
+        actual = branch_to_negated_condition(input)
+        self.assertEqual(actual, "(not_A)")
+
+    def test_node_without_dependency(self):
+        node_a = Node("A")
+        input = {node_a}
+        actual = branch_to_negated_condition(input)
+        self.assertEqual(actual, "(not_A)")
+
+    def test_empty_branch(self):
+        self.assertEqual(branch_to_negated_condition(set()), "")
 
 if __name__ == '__main__':
     unittest.main()
